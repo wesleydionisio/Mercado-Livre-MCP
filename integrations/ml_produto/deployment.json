@@ -1,0 +1,9 @@
+{
+  "name": "ml_produto",
+  "description": "Lê uma página de produto do Mercado Livre Brasil (link de anúncio MLB-… ou de catálogo /p/MLB…) e devolve ids, título, preço, preço anterior, desconto, preço no Pix, parcelas, condição, vendedor, loja oficial, frete grátis, estoque, nota, imagem e URL canônica. Só leitura.",
+  "request": {
+    "url": "https://www.mercadolivre.com.br/",
+    "intent": "Read one Mercado Livre Brazil product page and return its details. Read only.",
+    "effect": "read"
+  }
+}

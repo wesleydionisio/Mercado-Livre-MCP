@@ -1,0 +1,27 @@
+{
+  "name": "mercado-livre-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "MCPs só leitura do Mercado Livre (busca e produto) gerados com o Pomerado e o Claude",
+  "type": "module",
+  "engines": {
+    "node": ">=24.21.0 <25"
+  },
+  "scripts": {
+    "browser": "node --env-file-if-exists=.env scripts/browser.mjs",
+    "ip": "node --env-file-if-exists=.env scripts/ip.mjs",
+    "serve:busca": "pomerado-mcp serve --artifact integrations/ml_busca --endpoint ws://localhost:9555/pw",
+    "serve:produto": "pomerado-mcp serve --artifact integrations/ml_produto --endpoint ws://localhost:9555/pw",
+    "call": "node --env-file-if-exists=.env scripts/mcp-call.mjs",
+    "bridge": "node --env-file-if-exists=.env bridge/bridge.mjs logs/bridge",
+    "smoke:bridge": "node scripts/smoke-bridge.mjs",
+    "check": "node --check bridge/bridge.mjs && node --check scripts/browser.mjs && node --check scripts/mcp-call.mjs && node --check integrations/ml_busca/src/tool.mjs && node --check integrations/ml_produto/src/tool.mjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "1.3.0",
+    "@openai/agents": "0.18.0",
+    "effect": "3.22.2",
+    "patchright": "1.63.0",
+    "pomerado": "0.4.0-canary.483"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "ml_busca",
+  "description": "Busca produtos no Mercado Livre Brasil por termo e devolve a primeira página de resultados: título, preço, preço anterior, desconto, frete grátis, patrocinado, link limpo, imagem, nota e vendedor, com cursor para as páginas seguintes. Só leitura.",
+  "request": {
+    "url": "https://www.mercadolivre.com.br/",
+    "intent": "Search Mercado Livre Brazil for a search term and return the products listed on the first page of results. Read only.",
+    "effect": "read"
+  }
+}

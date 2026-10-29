@@ -1,0 +1,290 @@
+{
+  "entrypoint": "src/tool.mjs",
+  "files": [
+    "src/tool.mjs"
+  ],
+  "inputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$defs": {
+      "NonEmptyString": {
+        "type": "string",
+        "description": "a non empty string",
+        "title": "nonEmptyString",
+        "minLength": 1
+      },
+      "Int": {
+        "type": "integer",
+        "description": "an integer",
+        "title": "int"
+      }
+    },
+    "type": "object",
+    "required": [
+      "query"
+    ],
+    "properties": {
+      "query": {
+        "$ref": "#/$defs/NonEmptyString",
+        "description": "One search term, as you would type it into Mercado Livre's search box",
+        "pattern": "\\S",
+        "title": "maxLength(120)",
+        "examples": [
+          "fone bluetooth"
+        ],
+        "maxLength": 120
+      },
+      "limit": {
+        "$ref": "#/$defs/Int",
+        "description": "The most results to return in this call, 1 to 50. Default 20.",
+        "title": "between(1, 50)",
+        "minimum": 1,
+        "maximum": 50
+      },
+      "cursor": {
+        "type": "string",
+        "description": "The next_cursor a previous call returned, to get the results that follow. Send the same other inputs as that call; limit may change.",
+        "title": "maxLength(2048)",
+        "maxLength": 2048
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$defs": {
+      "Trimmed": {
+        "type": "string",
+        "description": "a string with no leading or trailing whitespace",
+        "title": "trimmed",
+        "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$"
+      },
+      "Int": {
+        "type": "integer",
+        "description": "an integer",
+        "title": "int"
+      },
+      "NonEmptyTrimmedString": {
+        "type": "string",
+        "description": "a non empty string",
+        "title": "nonEmptyString",
+        "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
+        "minLength": 1
+      }
+    },
+    "type": "object",
+    "required": [
+      "applied_query",
+      "query_corrected",
+      "results",
+      "next_cursor",
+      "next_cursor_expires_at",
+      "has_more",
+      "total_results",
+      "list_changed"
+    ],
+    "properties": {
+      "applied_query": {
+        "$ref": "#/$defs/Trimmed",
+        "description": "The search term the results page says it searched",
+        "title": "nonEmptyString",
+        "minLength": 1
+      },
+      "query_corrected": {
+        "type": "boolean",
+        "description": "True when the site searched a different term than the one sent, such as a corrected spelling"
+      },
+      "results": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": [
+            "item_id",
+            "title",
+            "price",
+            "previous_price",
+            "discount_percent",
+            "currency",
+            "free_shipping",
+            "shipping_label",
+            "sponsored",
+            "url",
+            "image_url",
+            "rating",
+            "seller"
+          ],
+          "properties": {
+            "item_id": {
+              "type": "string",
+              "description": "The listing's item ID as Mercado Livre shows it, such as MLB1234567890; for a catalog product card that names no single listing (several sellers), the catalog product ID, such as MLB79456482",
+              "pattern": "^[A-Z]{3}\\d+$"
+            },
+            "title": {
+              "$ref": "#/$defs/Trimmed",
+              "description": "The product title as the result card shows it",
+              "title": "nonEmptyString",
+              "minLength": 1
+            },
+            "price": {
+              "type": "number",
+              "description": "Current price in BRL (reais) as a number, such as 122.5 for R$ 122,50",
+              "title": "nonNegative",
+              "minimum": 0
+            },
+            "previous_price": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "description": "a non-negative number",
+                  "title": "nonNegative",
+                  "minimum": 0
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The previous (crossed-out) price in BRL as a number; null when the card shows none"
+            },
+            "discount_percent": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Int",
+                  "description": "a number between 0 and 100",
+                  "title": "between(0, 100)",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The discount the card shows, in percent (18 for \"18% OFF\"); null when it shows none"
+            },
+            "currency": {
+              "type": "string",
+              "enum": [
+                "BRL"
+              ],
+              "description": "ISO 4217 currency of the prices, always BRL on this site"
+            },
+            "free_shipping": {
+              "type": "boolean",
+              "description": "True when the card's shipping line offers free shipping (grátis), such as \"Chegará grátis amanhã\""
+            },
+            "shipping_label": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/NonEmptyTrimmedString"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The card's shipping line as shown, such as \"Chegará grátis hoje\"; null when the card shows none"
+            },
+            "sponsored": {
+              "type": "boolean",
+              "description": "True when the card is an ad (Patrocinado)"
+            },
+            "url": {
+              "type": "string",
+              "description": "The product page URL without tracking parameters. For sponsored cards, whose only link is an ad click-tracking redirect, this is the site's item link https://produto.mercadolivre.com.br/MLB-<id>, which opens the same product page",
+              "pattern": "^https:\\/\\/[^?#\\s]+$"
+            },
+            "image_url": {
+              "type": "string",
+              "description": "URL of the card's main product image",
+              "pattern": "^https:\\/\\/\\S+$"
+            },
+            "rating": {
+              "anyOf": [
+                {
+                  "type": "number",
+                  "description": "a number between 0 and 5",
+                  "title": "between(0, 5)",
+                  "minimum": 0,
+                  "maximum": 5
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Average customer rating out of 5 as the card shows it; null when the card shows none"
+            },
+            "seller": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/NonEmptyTrimmedString"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "The seller or official store line the card shows, such as \"JBL\"; null when the card shows none"
+            }
+          },
+          "additionalProperties": false
+        },
+        "description": "Products in the site's order, sponsored ones in place"
+      },
+      "next_cursor": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Pass as cursor, with the same inputs, to get the results that follow. Null when no more can be fetched."
+      },
+      "next_cursor_expires_at": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "When next_cursor stops working, as an ISO 8601 UTC time; null when next_cursor is null."
+      },
+      "has_more": {
+        "type": "boolean",
+        "description": "Whether the site shows more results after these, reachable or not."
+      },
+      "total_results": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Int",
+            "description": "a non-negative number",
+            "title": "nonNegative",
+            "minimum": 0
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The site's own exact count of results; null when it shows none or only an approximate one."
+      },
+      "list_changed": {
+        "type": "boolean",
+        "description": "True when the site's list changed since the cursor was issued, and on every later page once rows returned before can come back; rows may be missing or repeated relative to earlier pages, so de-duplicate by key."
+      },
+      "next_cursor_unavailable": {
+        "type": "string",
+        "enum": [
+          "depth_cap",
+          "no_progress",
+          "position_too_long",
+          "unsigned_host",
+          "off_site",
+          "not_a_draft",
+          "inputs_not_json"
+        ],
+        "description": "Why next_cursor is null although has_more is true: depth_cap past the deepest page this tool can reach again, no_progress when this call returned no results and could not move past the cursor's position, or the run's time stopped it there twice in a row, position_too_long when the site's link to the next page is too long for a cursor, off_site when it leaves the site, or the host could not sign one."
+      }
+    },
+    "additionalProperties": false
+  },
+  "questions": {}
+}

@@ -1,0 +1,293 @@
+{
+  "entrypoint": "src/tool.mjs",
+  "files": [
+    "src/tool.mjs"
+  ],
+  "inputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "required": [
+      "url"
+    ],
+    "properties": {
+      "url": {
+        "type": "string",
+        "description": "One Mercado Livre Brazil product page URL, one per call: a listing link (produto.mercadolivre.com.br/MLB-…), a catalog link (www.mercadolivre.com.br/…/p/MLB…) or a product link (…/up/MLBU…). Opened unchanged.",
+        "pattern": "^https:\\/\\/[^\\s/]+\\/\\S*MLB\\S*$",
+        "title": "maxLength(2000)",
+        "examples": [
+          "https://www.mercadolivre.com.br/fritadeira-airfryer-xl-philips-walita-hd9206/p/MLB35612949"
+        ],
+        "maxLength": 2000
+      }
+    },
+    "additionalProperties": false
+  },
+  "outputSchema": {
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$defs": {
+      "Trimmed": {
+        "type": "string",
+        "description": "a string with no leading or trailing whitespace",
+        "title": "trimmed",
+        "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$"
+      },
+      "Int": {
+        "type": "integer",
+        "description": "an integer",
+        "title": "int"
+      },
+      "NonEmptyTrimmedString": {
+        "type": "string",
+        "description": "a non empty string",
+        "title": "nonEmptyString",
+        "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
+        "minLength": 1
+      }
+    },
+    "type": "object",
+    "required": [
+      "item_id",
+      "catalog_product_id",
+      "user_product_id",
+      "title",
+      "currency",
+      "price",
+      "previous_price",
+      "discount_percent",
+      "pix_price",
+      "installments_text",
+      "condition",
+      "condition_label",
+      "sold_text",
+      "seller_name",
+      "official_store",
+      "free_shipping",
+      "stock_text",
+      "available_quantity_text",
+      "rating",
+      "review_count",
+      "image_url",
+      "canonical_url",
+      "page_url"
+    ],
+    "properties": {
+      "item_id": {
+        "type": "string",
+        "description": "The listing (item) id of the offer the page shows, such as MLB1234567890",
+        "pattern": "^MLB\\d{4,15}$"
+      },
+      "catalog_product_id": {
+        "anyOf": [
+          {
+            "type": "string",
+            "description": "a string matching the pattern ^MLB\\d{4,15}$",
+            "pattern": "^MLB\\d{4,15}$"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The catalog product id (the /p/MLB… page) the offer belongs to, or null when the listing is not part of a catalog product"
+      },
+      "user_product_id": {
+        "anyOf": [
+          {
+            "type": "string",
+            "description": "a string matching the pattern ^MLBU\\d{4,15}$",
+            "pattern": "^MLBU\\d{4,15}$"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The site's user-product id (MLBU…) for the offer, or null when the page has none"
+      },
+      "title": {
+        "$ref": "#/$defs/Trimmed",
+        "description": "The product title as the page's heading shows it",
+        "title": "nonEmptyString",
+        "minLength": 1
+      },
+      "currency": {
+        "type": "string",
+        "enum": [
+          "BRL"
+        ],
+        "description": "ISO 4217 currency of every amount, as the page states it"
+      },
+      "price": {
+        "type": "number",
+        "description": "Current price in BRL as a number. When the page shows a Pix price as its main price and a separate regular price (\"ou R$ X em …\"), this is that regular price; otherwise it is the main price shown",
+        "title": "nonNegative",
+        "minimum": 0
+      },
+      "previous_price": {
+        "anyOf": [
+          {
+            "type": "number",
+            "description": "a non-negative number",
+            "title": "nonNegative",
+            "minimum": 0
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The crossed-out previous price in BRL, or null when the page shows none"
+      },
+      "discount_percent": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Int",
+            "description": "a number between 1 and 100",
+            "title": "between(1, 100)",
+            "minimum": 1,
+            "maximum": 100
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The discount percent the page shows beside the price (\"35% OFF\" is 35), or null when it shows none"
+      },
+      "pix_price": {
+        "anyOf": [
+          {
+            "type": "number",
+            "description": "a non-negative number",
+            "title": "nonNegative",
+            "minimum": 0
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The price in BRL for paying with Pix when the page labels its main price \"no Pix\", or null when the page shows no Pix price"
+      },
+      "installments_text": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/NonEmptyTrimmedString"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The installments line under the price as the page shows it, such as \"6x R$ 54,98 sem juros\", or null when the page shows none"
+      },
+      "condition": {
+        "type": "string",
+        "enum": [
+          "new",
+          "used",
+          "refurbished",
+          "not_specified"
+        ],
+        "description": "The item's condition from the page's data: new, used, refurbished or not_specified"
+      },
+      "condition_label": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/NonEmptyTrimmedString"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The condition as the page's subtitle words it, such as \"Novo\" or \"Usado\", or null when the subtitle shows none"
+      },
+      "sold_text": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/NonEmptyTrimmedString"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The sales count text from the page's subtitle, such as \"+5 mil vendidos\", or null when it shows none"
+      },
+      "seller_name": {
+        "$ref": "#/$defs/Trimmed",
+        "description": "The seller's name (the official store's name for an official store)",
+        "title": "nonEmptyString",
+        "minLength": 1
+      },
+      "official_store": {
+        "type": "boolean",
+        "description": "Whether the seller is an official store (Loja oficial)"
+      },
+      "free_shipping": {
+        "type": "boolean",
+        "description": "Whether the listing itself ships free, from the page's data; a one-off first-purchase free delivery promotion does not count"
+      },
+      "stock_text": {
+        "$ref": "#/$defs/Trimmed",
+        "description": "The stock or availability text the page shows, such as \"Estoque disponível\" or \"Último disponível!\"",
+        "title": "nonEmptyString",
+        "minLength": 1
+      },
+      "available_quantity_text": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/NonEmptyTrimmedString"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "The available quantity note beside the quantity picker, such as \"(+50 disponíveis)\", or null when the page shows none"
+      },
+      "rating": {
+        "anyOf": [
+          {
+            "type": "number",
+            "description": "a number between 0 and 5",
+            "title": "between(0, 5)",
+            "minimum": 0,
+            "maximum": 5
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Average rating out of 5 shown in the header, or null when the product has no reviews"
+      },
+      "review_count": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/Int",
+            "description": "a non-negative number",
+            "title": "nonNegative",
+            "minimum": 0
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "description": "Number of reviews (opinions) shown beside the rating, not a sales count, or null when the product has no reviews"
+      },
+      "image_url": {
+        "$ref": "#/$defs/Trimmed",
+        "description": "URL of the main product image, as the gallery's first image shows it",
+        "title": "nonEmptyString",
+        "minLength": 1
+      },
+      "canonical_url": {
+        "$ref": "#/$defs/Trimmed",
+        "description": "The page's canonical URL as it declares it",
+        "title": "nonEmptyString",
+        "minLength": 1
+      },
+      "page_url": {
+        "$ref": "#/$defs/Trimmed",
+        "description": "The URL the product page finally landed on after the site's redirects",
+        "title": "nonEmptyString",
+        "minLength": 1
+      }
+    },
+    "additionalProperties": false
+  },
+  "questions": {}
+}
